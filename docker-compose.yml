@@ -1,8 +1,14 @@
 volumes:
     cowrie-var:
 
-services:
+networks:
+  backend:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.238.0/24"
 
+services:
   cowrie:
     image: cowrie/cowrie
     volumes:
@@ -10,3 +16,18 @@ services:
       - cowrie-var:/cowrie/cowrie-git/var
     ports:
       - "2222:2222"
+    networks:
+      backend:
+  
+  rsyslog:
+    image: rsyslog/syslog_appliance_alpine
+    volumes:
+      - cowrie-var:/data
+      - ./config/rsyslog.conf:/etc/rsyslog.conf
+    networks:
+      backend:
+        ipv4_address: 172.16.238.10
+    depends_on:
+      cowrie:
+        condition: service_started
+        restart: true
