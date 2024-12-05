@@ -1,0 +1,12 @@
+volumes:
+    cowrie-var:
+
+services:
+
+  cowrie:
+    image: cowrie/cowrie
+    volumes:
+      - ./config/cowrie.cfg:/cowrie/cowrie-git/etc/cowrie.cfg
+      - cowrie-var:/cowrie/cowrie-git/var
+    ports:
+      - "2222:2222"
