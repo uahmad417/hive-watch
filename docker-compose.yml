@@ -22,7 +22,7 @@ services:
   rsyslog:
     image: rsyslog/syslog_appliance_alpine
     volumes:
-      - cowrie-var:/data
+      - cowrie-var:/data/cowrie
       - ./config/rsyslog.conf:/etc/rsyslog.conf
     networks:
       backend:
