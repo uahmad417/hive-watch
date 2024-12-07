@@ -26,8 +26,18 @@ services:
       - ./config/rsyslog.conf:/etc/rsyslog.conf
     networks:
       backend:
-        ipv4_address: 172.16.238.10
     depends_on:
       cowrie:
         condition: service_started
         restart: true
+  
+  collector:
+    build:
+      context: collector
+      dockerfile: Dockerfile
+    environment:
+      - SYSLOG_HOST=0.0.0.0
+      - SYSLOG_PORT=5170
+    networks:
+      backend:
+        ipv4_address: 172.16.238.11
