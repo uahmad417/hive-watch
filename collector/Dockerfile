@@ -11,6 +11,7 @@ RUN pip3 install -r requirements.txt
 
 ENV SYSLOG_HOST=0.0.0.0
 ENV SYSLOG_PORT=5170
+ENV LOGGING_LEVEL=INFO
 ENV PYTHONUNBUFFERED=1ssh
 
 CMD [ "python3", "collector.py" ]

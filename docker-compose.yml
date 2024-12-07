@@ -38,6 +38,7 @@ services:
     environment:
       - SYSLOG_HOST=0.0.0.0
       - SYSLOG_PORT=5170
+      - LOGGING_LEVEL=INFO
     networks:
       backend:
         ipv4_address: 172.16.238.11
