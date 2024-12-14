@@ -19,13 +19,17 @@ class Collector:
     """
 
     def __init__(self) -> None:
-        self.producer: KafkaProducer = None
-        self.sock: socket.socket = None
         self.logger: logging.Logger = self.create_logger()
+        self.producer: KafkaProducer = self.create_kafka_producer()
+        self.sock: socket.socket = None
 
-    def create_logger(self) -> None:
+    def create_logger(self) -> logging.Logger:
         """
         Setup and configure the logger for this module
+
+        ## Returns
+
+        configured logger object for this module
         """
 
         logger = logging.Logger(__name__)
@@ -40,6 +44,22 @@ class Collector:
         logger.setLevel(os.environ.get("LOGGING_LEVEL"))
         logger.info("Starting collector service...")
         return logger
+
+    def create_kafka_producer(self) -> KafkaProducer:
+        """
+        Configure the kafka producer
+
+        ## Returns
+
+        A `KafkaProducer` object
+        """
+
+        broker_host = os.getenv("KAFKA_HOST")
+        broker_port = os.getenv("KAFKA_PORT")
+        producer = KafkaProducer(
+            bootstrap_servers=[f"{broker_host}:{broker_port}"])
+        self.logger.info(f"Connected to broker: {broker_host}:{broker_port}")
+        return producer
 
     def start(self) -> None:
         """
@@ -69,7 +89,7 @@ class Collector:
                     data = conn.recv(4096)
                     if not data:
                         break
-                    self.process_logs(data.decode("utf-8"), addr)
+                    self.process_logs(data, addr)
 
         except KeyboardInterrupt:
             self.logger.info(f"Shutting down collector....")
@@ -88,7 +108,7 @@ class Collector:
         addr (str): server address from which log was recieved
         """
 
-        self.logger.info(f"Log recieved from {addr}: {log}")
+        self.producer.send("cowrie", log)
 
     def close(self) -> None:
         """
