@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kakfa
+  labels:
+    app: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: hive-bridge-kafka
+          image: bitnami/kafka:latest
+          ports:
+            - containerPort: 9092
+            - containerPort: 9093
+            - containerPort: 9094
+          envFrom:
+            - configMapRef:
+                name: kafka-config
+          
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-config
+data:
+  KAFKA_CFG_NODE_ID: "0"
+  KAFKA_CFG_PROCESS_ROLES: controller,broker
+  KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+  KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://kafka.2405198.rahtiapp.fi:80
+  KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+  KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+  KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+spec:
+  selector:
+    app: kafka
+  ports:
+  - name: broker-internal
+    port: 9092
+  - name: controller
+    port: 9093
+  - name: broker-external
+    port: 9094
+    targetPort: 9094
+
+---
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: kafka
+spec:
+  host: kafka.2405198.rahtiapp.fi
+  to:
+    kind: Service
+    name: kafka
+  tls:
+    insecureEdgeTerminationPolicy: Allow
