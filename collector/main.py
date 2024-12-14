@@ -1,4 +1,4 @@
-from collector import Collector, test
+from collector import Collector
 
 if __name__ == "__main__":
     col = Collector()
