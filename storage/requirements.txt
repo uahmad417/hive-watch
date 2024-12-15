@@ -1,3 +1,4 @@
 certifi==2024.12.14
 elasticsearch==7.16.2
+paho-mqtt==2.1.0
 urllib3==1.26.20
