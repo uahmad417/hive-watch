@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enrichment
+  labels:
+    app: enrichment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: enrichment 
+  template:
+    metadata:
+      labels:
+        app: enrichment
+    spec:
+      containers:
+        - name: enrichment
+          image: uahmad18/hive-bridge-enrichment:1.0
+          envFrom:
+            - configMapRef:
+                name: enrichment-config
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: enrichment-config
+data:
+  MQTT_HOST: mqtt-service
+  MQTT_PORT: "8883"
+  LOGGING_LEVEL: DEBUG
+
+---
