@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import socket
@@ -118,11 +119,15 @@ class Collector:
         # difficult to parse. They are split here so that they are forwarded
         # as individual messages
         data = log.decode('utf-8').strip().split("\r\n")
-        
-        topic = data[0].get("sensor")
 
         for log in data:
-            self.producer.publish(topic=topic, payload=log.encode('utf-8'), qos=0, retain=False)
+            topic = json.loads(log).get("sensor")
+            self.producer.publish(
+                topic=topic,
+                payload=log.encode('utf-8'),
+                qos=0,
+                retain=False
+                )
 
     def close(self) -> None:
         """
