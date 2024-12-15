@@ -8,6 +8,7 @@ COPY requirements.txt ./
 COPY collector.py ./
 COPY __init__.py ./
 COPY main.py ./
+COPY ca.crt ./
 
 RUN pip3 install -r requirements.txt
 
