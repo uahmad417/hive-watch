@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import socket
@@ -112,9 +113,20 @@ class Collector:
         addr (str): server address from which log was recieved
         """
 
-        # TODO: this should not be hardcoded
         self.logger.info(f"msg is {log}")
-        self.producer.publish(topic="cowrie", payload=log, qos=0, retain=False)
+
+        # sometimes multiple messages are recieved which later are
+        # difficult to parse. They are split here so that they are forwarded
+        # as individual messages
+        data = log.decode('utf-8').strip().split("\r\n")
+
+        for log in data:
+            self.producer.publish(
+                topic="sensor-data",
+                payload=log.encode('utf-8'),
+                qos=0,
+                retain=False
+                )
 
     def close(self) -> None:
         """

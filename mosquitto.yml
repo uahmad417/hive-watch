@@ -96,5 +96,5 @@ spec:
     name: mqtt-service
   tls:
     termination: passthrough
-  ports:
+  port:
     targetPort: listen-port2
