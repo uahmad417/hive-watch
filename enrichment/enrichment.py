@@ -1,7 +1,10 @@
 import logging
+
+import requests
 import os
 
 from paho.mqtt import client as mqtt
+import json
 
 
 class Enrichment:
@@ -18,8 +21,16 @@ class Enrichment:
         self.subscriber: mqtt.Client = None
 
     def start(self):
+        """
+        start the enrichment service by starting the broker subscriber
+        """
 
+        broker_host = os.getenv("MQTT_HOST")
+        broker_port = os.getenv("MQTT_PORT")
+    
         self.subscriber = self.create_mqtt_subscriber()
+        self.subscriber.connect(broker_host, int(broker_port))
+        self.subscriber.loop_forever()
 
     def create_logger(self) -> logging.Logger:
         """
@@ -40,7 +51,7 @@ class Enrichment:
         )
         console_handler.setFormatter(formatter)
         logger.setLevel(os.environ.get("LOGGING_LEVEL"))
-        logger.info("Starting collector service...")
+        logger.info("Starting Enrichment service...")
         return logger
 
     def create_mqtt_subscriber(self) -> mqtt.Client:
@@ -52,17 +63,12 @@ class Enrichment:
         A `mqtt.Client` object
         """
 
-        broker_host = os.getenv("MQTT_HOST")
-        broker_port = os.getenv("MQTT_PORT")
-
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-        client.tls_insecure_set(True)
         client.tls_set("ca.crt")
+        client.tls_insecure_set(True)
         client.on_connect = self.__on_connect
         client.on_message = self.__on_message
 
-        client.connect(broker_host, broker_port)
-        client.loop_start()
         return client
 
     def __on_connect(self, client, userdata, flags, reason_code, properties):
@@ -71,8 +77,7 @@ class Enrichment:
         """
 
         if reason_code.is_failure:
-            self.logger.error(f"Failed to connect: {
-                              reason_code}. loop_forever() will retry connection")
+            self.logger.error(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
         else:
             self.logger.info(f"Connected with broker")
             self.subscriber.subscribe("cowrie/#")
@@ -82,4 +87,19 @@ class Enrichment:
         When message is recieved, perform enrichemnt
         """
 
-        self.logger.info(f"Recieved data: {message.payload}")
+        # self.logger.info(f"Recieved data: {message.payload.decode('utf-8')}")
+        # self.logger.info(f"Recieved data: {json.loads(message.payload.decode('utf-8'))}")
+        decoded_data = json.loads(message.payload.decode("utf-8"))
+        self.check_ip(decoded_data)
+
+    def check_ip(self, data):
+
+        src_ip = data.get("data").get("src_ip")
+        self.logger.info(src_ip)
+        if src_ip:
+            response = requests.get(
+                url="https://api.abuseipdb.com/api/v2/check",
+                params={"maxAgeInDays": 90, "ipAddress": src_ip},
+                headers={"Key": os.environ.get("ABUSEIPDB_API_KEY"), "accept": "application/json"}
+                )
+            self.logger.info({response.content})
