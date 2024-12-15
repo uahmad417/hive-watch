@@ -1,4 +1,4 @@
-from .enrichment import Enrichment
+from enrichment import Enrichment
 
 if __name__ == "__main__":
     enr = Enrichment()
