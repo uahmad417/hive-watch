@@ -12,6 +12,11 @@ class Enrichment:
 
     ## Attributes
 
+    logger (logging.Logger): module level logger object
+
+    producer (mqtt.Client): mosquitto producer object to publish data
+
+    subscriber (mqtt.Client): mosquitto subscriber object to consume data
 
     """
 
@@ -20,9 +25,11 @@ class Enrichment:
         self.producer: mqtt.Client = self.create_mqtt_producer()
         self.subscriber: mqtt.Client = None
 
-    def start(self):
+    def start(self) -> None:
         """
-        start the enrichment service by starting the broker subscriber
+        start the enrichment service.
+
+        initializes the mosquitto subscriber to start consuming messages
         """
 
         broker_host = os.getenv("MQTT_HOST")
@@ -115,8 +122,7 @@ class Enrichment:
         """
 
         if reason_code.is_failure:
-            self.logger.error(f"Failed to connect: {
-                              reason_code}. loop_forever() will retry connection")
+            self.logger.error(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
         else:
             self.logger.info(f"Connected with broker")
             self.subscriber.subscribe("cowrie/#")
@@ -126,12 +132,13 @@ class Enrichment:
         When message is recieved, perform enrichemnt
         """
 
-        # self.logger.info(f"Recieved data: {message.payload.decode('utf-8')}")
-        # self.logger.info(f"Recieved data: {json.loads(message.payload.decode('utf-8'))}")
         decoded_data = json.loads(message.payload.decode("utf-8"))
         self.check_ip(decoded_data)
 
     def check_ip(self, data):
+        """
+        Enrich ip data using abuseipdb api
+        """
 
         src_ip = data.get("data").get("src_ip")
         self.logger.info(src_ip)
