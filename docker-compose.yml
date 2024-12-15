@@ -41,6 +41,7 @@ services:
       - LOGGING_LEVEL=DEBUG
       - MQTT_HOST=<url>
       - MQTT_PORT=443
+      - MQTT_TOPIC=sensor-data
     networks:
       backend:
         ipv4_address: 172.16.238.11

@@ -122,7 +122,7 @@ class Collector:
 
         for log in data:
             self.producer.publish(
-                topic="sensor-data",
+                topic=os.environ.get("MQTT_TOPIC"),
                 payload=log.encode('utf-8'),
                 qos=0,
                 retain=False

@@ -2,32 +2,26 @@ import json
 import logging
 import os
 
-import requests
+from elasticsearch import Elasticsearch
 from paho.mqtt import client as mqtt
 
 
-class Enrichment:
+class Storage:
     """
-    Represents the enrcihment service
+    Represenets the storage service
 
-    ## Attributes
-
-    logger (logging.Logger): module level logger object
-
-    producer (mqtt.Client): mosquitto producer object to publish data
-
-    subscriber (mqtt.Client): mosquitto subscriber object to consume data
+    ## Attributes:
 
     """
 
     def __init__(self) -> None:
         self.logger: logging.Logger = self.create_logger()
-        self.producer: mqtt.Client = self.create_mqtt_producer()
         self.subscriber: mqtt.Client = None
+        self.es_client: Elasticsearch = self.get_elastic_client()
 
     def start(self) -> None:
         """
-        start the enrichment service.
+        start the storage service.
 
         initializes the mosquitto subscriber to start consuming messages
         """
@@ -61,24 +55,13 @@ class Enrichment:
         logger.info("Starting Enrichment service...")
         return logger
 
-    def create_mqtt_producer(self) -> mqtt.Client:
+    def get_elastic_client(self) -> Elasticsearch:
         """
-        Configure the mqtt producer
-
-        ## Returns
-
-        A `mqtt.Client` object
+        Create the elasticsearch client object
         """
 
-        broker_host = os.getenv("MQTT_HOST")
-        broker_port = os.getenv("MQTT_PORT")
-        client = mqtt.Client()
-        client.tls_set("ca.crt")
-        client.tls_insecure_set(True)
-        client.on_connect = self.__producer_on_connect
-        client.on_publish = self.__producer_on_publish
-        client.connect(broker_host, int(broker_port))
-        client.loop_start()
+        client = Elasticsearch(hosts=os.environ.get("ELASTIC_HOST"))
+        self.logger.info(f"Connection to Elasticsearch established at {os.environ.get("ELASTIC_HOST")}")
         return client
 
     def create_mqtt_subscriber(self) -> mqtt.Client:
@@ -98,24 +81,6 @@ class Enrichment:
 
         return client
 
-    def __producer_on_connect(self, client, userdata, flags, reason_code):
-        """
-        When connected with mqtt broker
-        """
-
-        if reason_code == 0:
-            self.logger.info(f"Publisher connected with mqtt broker {reason_code}")
-        else:
-            self.logger.error(
-                f"Failed to connect with broker with result: {reason_code}")
-
-    def __producer_on_publish(self, client, userdata, mid):
-        """
-        when messge is published to broker
-        """
-
-        self.logger.debug(f"Msg published {mid}")
-
     def __subscriber_on_connect(self, client, userdata, flags, reason_code, properties):
         """
         When connected with the broker then subscribe to the topic
@@ -125,7 +90,7 @@ class Enrichment:
             self.logger.error(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
         else:
             self.logger.info(f"Subscriber connected with broker")
-            self.subscriber.subscribe(f"{os.environ.get("MQTT_TOPIC_RAW")}/#")
+            self.subscriber.subscribe(f"{os.environ.get("MQTT_TOPIC")}/#")
 
     def __subscrber_on_message(self, client, userdata, message):
         """
@@ -133,26 +98,12 @@ class Enrichment:
         """
 
         decoded_data = json.loads(message.payload.decode("utf-8"))
-        self.check_ip(decoded_data)
+        self.upload_to_elastic(decoded_data)
 
-    def check_ip(self, data):
+    def upload_to_elastic(self, data) -> None:
         """
-        Enrich ip data using abuseipdb api
+        Upload the data to elasticsearch
         """
 
-        src_ip = data.get("data").get("src_ip")
-        if src_ip:
-            response = requests.get(
-                url="https://api.abuseipdb.com/api/v2/check",
-                params={"maxAgeInDays": 90, "ipAddress": src_ip},
-                headers={"Key": os.environ.get(
-                    "ABUSEIPDB_API_KEY"), "accept": "application/json"}
-            )
-
-            data["data"].update({"abuse_ipdb": response.json().get("data")})
-            self.producer.publish(
-                topic=os.environ.get("MQTT_TOPIC_ENRICHED"),
-                payload=json.dumps(data).encode('utf-8'),
-                qos=0,
-                retain=False
-            )
+        response = self.es_client.index(index=os.environ.get("ELASTIC_INDEX"), body=data)
+        self.logger.debug(f"Document index to elasticsearch {response}")
