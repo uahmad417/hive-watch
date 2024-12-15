@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage
+  labels:
+    app: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storage 
+  template:
+    metadata:
+      labels:
+        app: storage
+    spec:
+      containers:
+        - name: storage
+          image: uahmad18/hive-bridge-storage:1.0
+          envFrom:
+            - configMapRef:
+                name: storage-config
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: enrichment-config
+data:
+  LOGGING_LEVEL: DEBUG
+  MQTT_HOST: <url>
+  MQTT_PORT: 443
+  MQTT_TOPIC: sensor-data
+  ELASTIC_HOST: <url>
+  ELASTIC_INDEX: sensors
+
+---
