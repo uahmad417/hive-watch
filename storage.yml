@@ -28,8 +28,8 @@ metadata:
   name: enrichment-config
 data:
   LOGGING_LEVEL: DEBUG
-  MQTT_HOST: <url>
-  MQTT_PORT: 443
+  MQTT_HOST: mqtt-service
+  MQTT_PORT: "8883"
   MQTT_TOPIC: sensor-data
   ELASTIC_HOST: <url>
   ELASTIC_INDEX: sensors
