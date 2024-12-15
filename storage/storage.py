@@ -90,7 +90,7 @@ class Storage:
             self.logger.error(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
         else:
             self.logger.info(f"Subscriber connected with broker")
-            self.subscriber.subscribe("enriched/#")
+            self.subscriber.subscribe(f"{os.environ.get("MQTT_TOPIC")}/#")
 
     def __subscrber_on_message(self, client, userdata, message):
         """
