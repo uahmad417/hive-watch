@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-broker-deployment
+  labels:
+    app: mqtt-broker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-broker 
+  template:
+    metadata:
+      labels:
+        app: mqtt-broker
+    spec:
+      containers:
+        - name: mqtt-broker
+          image: eclipse-mosquitto
+          ports:
+            - containerPort: 1883
+            - containerPort: 8883
+          volumeMounts: 
+            - name: mosquitto-config
+              mountPath: /mosquitto/config
+            - name: mosquitto-certs
+              mountPath: /certs
+      
+      volumes:
+        - name: mosquitto-config
+          configMap:
+            name: mqtt-config-file
+        - name: mosquitto-certs
+          secret:
+            secretName: mqtt-certs-file
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mqtt-certs-file
+type: Opaque
+data:
+  server.crt: |
+    LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN3akNDQWFvQ0ZBSmU0RXhPSnl1THNxaUs0b2NSTmNXVzR6SnVNQTBHQ1NxR1NJYjNEUUVCQ3dVQU1CMHgKRFRBTEJnTlZCQW9NQkdGamJXVXhEREFLQmdOVkJBTU1BMk52YlRBZUZ3MHlNakF6TVRReE56QXdNRGhhRncwegpNakF6TVRFeE56QXdNRGhhTUI0eERqQU1CZ05WQkFvTUJXRmpiV1V5TVF3d0NnWURWUVFEREFOamIyMHdnZ0VpCk1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRGV2TjFhOW43VENyWHhoRGhOK3dGblhBUmYKb2s1QXRrSGVjNFY4ZWRPMWJNMVE3UVhBclBmTGVqWWZ6THlMdm9jbncyVGhNeUwwSmNxWUlPUlZXWFZqcnVoawpNTk9QYlQ5eFlwTDV5ais3NzhpU3R4ckdHNTVRc2xIQTZUQVlUT05YVEd6R011V2lQcFpUV3pJMGJvaVNyNG45CjBVdVRWWnBkb2dqNTBzVHdnQmtjbUtFL0N2bWlaZmRaWng2T3l1eStCcGdDcHZ6eHVucDkzbDFsZWpTVjUrZ28KbkJEK3lFVGV0MmpZL0pyL0xvK0xDMSszUUhPYjhTZmw3L2tXNzY0TFJwNXJoNENaRXVTNTErVE9Qc3ZhZGFvbAoxbDFQVHB2OTdlQmhyRHdvYkhEa0JXZTNRcCs3TUlKUk5velM5OEQvYjVlL1hXL1lsRzY2WC9wVXVubXhBZ01CCkFBRXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQU95QTErczI1R04rWXR2TDdxa2ZlMllueER6ci9BRFgvTksKRWlFRWVhVlhnQnZ3TVZBSWY1RGhiQWhNQWdKbWk2aG10Mngxanh4U3Fkck45QWpOc2R6bm5JcHN2VjZSM21zWApocmVOMHNjYXpoenFabzdVTk1MTloySTlzSEp0UzROM3g1WjlQY2I4UGg4cFlLcFIycUg2WHJCdG1XQmhtQmdsClNRM3NNZFlONEVhSEJhR2NMNDg3dDBac2RCcUZlV2pncDBDVlVteURpTEVWNHNJM0lsM1NjUmFSUDNERFRBbXkKT0ZyQ2FDNDR3Y3kzNXN6TkJRUmJaMWhmdno4VEwrbkJBTmxLV0RCSEt5NVg0VWo0SWFoUEx3WWIxdW16d3YzWQpvVVBieFVKQUprN0NKb1pkMkRYeDdsNDRwV0k0d3dIVnNoVjArS2dsa1lKZjBvQ2E4b0U9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0=
+
+  server.key: |
+    LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcFFJQkFBS0NBUUVBM3J6ZFd2Wiswd3ExOFlRNFRmc0JaMXdFWDZKT1FMWkIzbk9GZkhuVHRXek5VTzBGCndLejN5M28ySDh5OGk3NkhKOE5rNFRNaTlDWEttQ0RrVlZsMVk2N29aRERUajIwL2NXS1MrY28vdSsvSWtyY2EKeGh1ZVVMSlJ3T2t3R0V6alYweHN4akxsb2o2V1Uxc3lORzZJa3ErSi9kRkxrMVdhWGFJSStkTEU4SUFaSEppaApQd3I1b21YM1dXY2Vqc3JzdmdhWUFxYjg4YnA2ZmQ1ZFpYbzBsZWZvS0p3US9zaEUzcmRvMlB5YS95NlBpd3RmCnQwQnptL0VuNWUvNUZ1K3VDMGFlYTRlQW1STGt1ZGZremo3TDJuV3FKZFpkVDA2Yi9lM2dZYXc4S0d4dzVBVm4KdDBLZnV6Q0NVVGFNMHZmQS8yK1h2MTF2MkpSdXVsLzZWTHA1c1FJREFRQUJBb0lCQVFDU05CSndST0NXa3E4Kwo2dlV5YXBKUFVCMG0wUmpnYlVIclRKVFFVZjlmVlIyb0F3MEZuZ1BCTW1VWWxvRWtrVm1TQmpYUGhJdHJDdXRpCjFDUk15YjIrUXU4VDVPRFpnbkprY0xuYzhKN0pNK25LTkJxRTgxZ0Z6Q2JSbzc4SUZHQWR5M0tTM3BIUTM1ZzQKK3VHSGZRNTBpbmpmZkdSSlA2VmwxSmhqczYvRjFIWXBKYi90bnlFQklESUYreWdoVFdDcVhnUDhKY0k5VzQxeQpMeGpyeFF6VXBSSlEwdHN0S251V3RrUWFVVUd6QkVkTXVod1VSOGtuUDJPekx2eXNrYkpYckR4MUJvSlhTVUJFCjlZUUlxckszSWY0aGswZVFTM3NWaGxFOVcwcEt6ajJ4eWpvSHhLZkh0a1ErOXkrb29CTWc3Z2VuUktwU0FWMjgKdmpmWVpiZHBBb0dCQVBCd25waDhGVGcrYW81ZWFmbmtEdzg5MjNsM1lPUFltVzZsdmlnYldreGZFMUVzSHRpdAo0QjJ4SzRTd1U1VEZaK2F0UHE2RS9DK0lNMUQrV1dhNXZJQUlBZDcwcGFWRHdTelJ4bTQ1a2hLeG5OSXpEbGRrCmFCb1hXWjFRckcva3poaEpMUldFNkNiaXh6UzNXM0cvWWFrVlN1WGJKcCt3ajZpdTRpOC9zQmZIQW9HQkFPMG0KK1BIYW5XYzRNd3VKYk1WNDEvZE9RbUszdXJNWFo0K1FyOUt0Smo5TmlqNkU5bHZGbnExeStMMzJQRDF2K2xNRgo4dEpGQ1hNYmp0VTJEYzZJQWxveVhIM2FZNXFyeEEwMDlOVS9oZ0tBS3ZLb3RQTUlHZ2pzUDREYUFrT0NlRVRHCnBSSjVNNittMy8xMUlUUnR5d2p5cFhpVFhLbjFkZm1haXEzOWRCTEhBb0dCQUlEdWN5MGpoS0YzWHQ1ZkpJYjYKMDFTQ0FCbmZlUlpWQk5tL2lQdXF4ejRpMFpINmpjUDFZVE9xMk1JN1oyWmtnUFhDdXRVTXZNcWtSNWhML0JiSQp6SnIvTURtbGlOblpQbEpSWHcybVUzMHd2djQ4b0prZVgzQjJTdmkvMU9mZmt1Q1ZCTmNBUVJqeERJOXBMMkVNCmxrcjcvd0RKQnFvbEhMUUFxNHRZcEkzckFvR0JBSmtYbG85eXBEZ1ZCSWJIRVV1dFJpV2xCSi83b1crcGhUWWQKbmhNdnFjZ2x3eisyejk3UWhTM05VWnczMEEyTk14alRkenljU294ZlZ1WjJ2WlQ5SWgrZDhTMWhoUGs5TnhPYgpndzRDc3Z6OFJqMWVBV24rYWVnbXNwdjRvSXQ2TnkrVzJNdERLTVdVd1hZNlhkUWRxSHMvUU9qRW9JWXJLaHlXCjBqMmRwNGZUQW9HQWMrVDQ5QnF6YWxPTVZQS2I4RkFmRk5ZUjVBMWVTL3lrUUhDeE1PRndOMmVNWm50bWYwRnkKYzZ6T3U4ZTE2YUhpOC9FMmFGemczL0kvU0F1WnY3RlBySEI1MW1uc2tuMW9PcVc4VjdNQU52V3k2Vk8xeXV6NQo0SFlZMS93Vi96bWQweDl1Z2IrNWJMTXQyenJicFUxWWJ2aHU3RWFndzY3clJKSTB0WkdjMlNFPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqtt-config-file
+data:
+  mosquitto.conf: |
+    allow_anonymous true
+
+    listener 1883
+    certfile /certs/server.crt
+    keyfile /certs/server.key
+
+    listener 8883
+    certfile /certs/server.crt
+    keyfile /certs/server.key
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mqtt-service
+spec:
+  selector:
+    app: mqtt-broker
+  ports:
+  - name: listen-port1
+    port: 1883
+    targetPort: 1883
+  - name: listen-port2
+    port: 8883
+    targetPort: 8883
+
+---
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mqtt-route
+spec:
+  host: mqtt.2405198.rahtiapp.fi
+  to:
+    kind: Service
+    name: mqtt-service
+  tls:
+    termination: passthrough
+  ports:
+    targetPort: listen-port2
