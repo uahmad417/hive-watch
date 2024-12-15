@@ -25,13 +25,13 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: enrichment-config
+  name: storage-config
 data:
   LOGGING_LEVEL: DEBUG
   MQTT_HOST: mqtt-service
   MQTT_PORT: "8883"
   MQTT_TOPIC: sensor-data
-  ELASTIC_HOST: <url>
+  ELASTIC_HOST: http://elastic:password@elasticsearch-service:9200
   ELASTIC_INDEX: sensors
 
 ---
