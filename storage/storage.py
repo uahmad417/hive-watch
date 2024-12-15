@@ -60,7 +60,7 @@ class Storage:
         Create the elasticsearch client object
         """
 
-        client = Elasticsearch(os.environ.get("ELASTIC_HOST"))
+        client = Elasticsearch(hosts=os.environ.get("ELASTIC_HOST"))
         self.logger.info(f"Connection to Elasticsearch established at {os.environ.get("ELASTIC_HOST")}")
         return client
 
@@ -106,4 +106,4 @@ class Storage:
         """
 
         response = self.es_client.index(index=os.environ.get("ELASTIC_INDEX"), body=data)
-        self.logger.debug(f"Document index to elasticsearch {response.content}")
+        self.logger.debug(f"Document index to elasticsearch {response}")
