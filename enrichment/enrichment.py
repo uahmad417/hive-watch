@@ -104,7 +104,7 @@ class Enrichment:
         """
 
         if reason_code == 0:
-            self.logger.info(f"Connected with mqtt broker {reason_code}")
+            self.logger.info(f"Publisher connected with mqtt broker {reason_code}")
         else:
             self.logger.error(
                 f"Failed to connect with broker with result: {reason_code}")
@@ -124,8 +124,8 @@ class Enrichment:
         if reason_code.is_failure:
             self.logger.error(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
         else:
-            self.logger.info(f"Connected with broker")
-            self.subscriber.subscribe("cowrie/#")
+            self.logger.info(f"Subscriber connected with broker")
+            self.subscriber.subscribe("sensor-data/#")
 
     def __subscrber_on_message(self, client, userdata, message):
         """
