@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  labels:
+    app: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana 
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+        - name: kibana
+          image: docker.elastic.co/kibana/kibana:7.12.0
+          ports:
+            - containerPort: 5601
+          envFrom:
+            - configMapRef:
+                name: kibana-config
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kibana-config
+data:
+  discovery.SERVER_NAME: kibana.example.org
+  ELASTICSEARCH_HOSTS: http://elasticsearch-service:9200
+  ELASTICSEARCH_USERNAME: elastic
+  ELASTICSEARCH_PASSWORD: password
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana-service
+spec:
+  selector:
+    app: kibana
+  ports:
+  - name: dashboard
+    port: 5601
+    targetPort: 5601
+---
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: kibana-route
+spec:
+  host: <url>
+  to:
+    kind: Service
+    name: kibana-service
+  port:
+    targetPort: dashboard
