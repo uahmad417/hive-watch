@@ -141,7 +141,6 @@ class Enrichment:
         """
 
         src_ip = data.get("data").get("src_ip")
-        self.logger.info(src_ip)
         if src_ip:
             response = requests.get(
                 url="https://api.abuseipdb.com/api/v2/check",
