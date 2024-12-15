@@ -121,9 +121,8 @@ class Collector:
         data = log.decode('utf-8').strip().split("\r\n")
 
         for log in data:
-            topic = json.loads(log).get("sensor")
             self.producer.publish(
-                topic=topic,
+                topic="sensor-data",
                 payload=log.encode('utf-8'),
                 qos=0,
                 retain=False
