@@ -29,6 +29,8 @@ metadata:
 data:
   MQTT_HOST: mqtt-service
   MQTT_PORT: "8883"
+  MQTT_TOPIC_RAW: sensor-data
+  MQTT_TOPIC_ENRICHED: enriched
   LOGGING_LEVEL: DEBUG
   ABUSEIPDB_API_KEY: <API_KEY>
 

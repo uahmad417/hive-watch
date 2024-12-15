@@ -125,7 +125,7 @@ class Enrichment:
             self.logger.error(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
         else:
             self.logger.info(f"Subscriber connected with broker")
-            self.subscriber.subscribe("sensor-data/#")
+            self.subscriber.subscribe(f"{os.environ.get("MQTT_TOPIC_RAW")}/#")
 
     def __subscrber_on_message(self, client, userdata, message):
         """
@@ -151,7 +151,7 @@ class Enrichment:
 
             data["data"].update({"abuse_ipdb": response.json().get("data")})
             self.producer.publish(
-                topic='enriched',
+                topic=os.environ.get("MQTT_TOPIC_ENRICHED"),
                 payload=json.dumps(data).encode('utf-8'),
                 qos=0,
                 retain=False
