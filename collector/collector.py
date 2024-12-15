@@ -2,7 +2,7 @@ import logging
 import os
 import socket
 
-from kafka import KafkaProducer
+from paho.mqtt import client as mqtt
 
 
 class Collector:
@@ -11,7 +11,7 @@ class Collector:
 
     ## Attributes
 
-    producer (KafkaProducer): KafkaProducer instance to push data onto the broker
+    producer (mqtt.Client): KafkaProducer instance to push data onto the broker
 
     sock (socket.socket): Socket instance to recieve logs from syslog server
 
@@ -20,7 +20,7 @@ class Collector:
 
     def __init__(self) -> None:
         self.logger: logging.Logger = self.create_logger()
-        self.producer: KafkaProducer = self.create_kafka_producer()
+        self.producer: mqtt.Client = self.create_mqtt_producer()
         self.sock: socket.socket = None
 
     def create_logger(self) -> logging.Logger:
@@ -45,21 +45,25 @@ class Collector:
         logger.info("Starting collector service...")
         return logger
 
-    def create_kafka_producer(self) -> KafkaProducer:
+    def create_mqtt_producer(self) -> mqtt.Client:
         """
-        Configure the kafka producer
+        Configure the mqtt producer
 
         ## Returns
 
-        A `KafkaProducer` object
+        A `mqtt.Client` object
         """
 
-        broker_host = os.getenv("KAFKA_HOST")
-        broker_port = os.getenv("KAFKA_PORT")
-        producer = KafkaProducer(
-            bootstrap_servers=[f"{broker_host}:{broker_port}"])
-        self.logger.info(f"Connected to broker: {broker_host}:{broker_port}")
-        return producer
+        broker_host = os.getenv("MQTT_HOST")
+        broker_port = os.getenv("MQTT_PORT")
+        client = mqtt.Client()
+        client.tls_set("ca.crt")
+        client.tls_insecure_set(True)
+        client.on_connect = self.__on_connect
+        client.on_publish = self.__on_publish
+        client.connect(broker_host, int(broker_port))
+        client.loop_start()
+        return client
 
     def start(self) -> None:
         """
@@ -108,7 +112,9 @@ class Collector:
         addr (str): server address from which log was recieved
         """
 
-        self.producer.send("cowrie", log)
+        # TODO: this should not be hardcoded
+        self.logger.info(f"msg is {log}")
+        self.producer.publish(topic="cowrie", payload=log, qos=0, retain=False)
 
     def close(self) -> None:
         """
@@ -118,3 +124,21 @@ class Collector:
         if self.sock:
             self.sock.close()
             self.sock = None
+
+    def __on_connect(self, client, userdata, flags, reason_code):
+        """
+        When connected with mqtt broker
+        """
+
+        if reason_code == 0:
+            self.logger.info(f"Connected with mqtt broker {reason_code}")
+        else:
+            self.logger.error(
+                f"Failed to connect with broker with result: {reason_code}")
+
+    def __on_publish(self, client, userdata, mid):
+        """
+        when messge is published to broker
+        """
+
+        self.logger.debug(f"Msg published {mid}")
