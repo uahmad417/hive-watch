@@ -30,7 +30,7 @@ data:
   LOGGING_LEVEL: DEBUG
   MQTT_HOST: mqtt-service
   MQTT_PORT: "8883"
-  MQTT_TOPIC: sensor-data
+  MQTT_TOPIC: enriched
   ELASTIC_HOST: http://elastic:password@elasticsearch-service:9200
   ELASTIC_INDEX: sensors
 
