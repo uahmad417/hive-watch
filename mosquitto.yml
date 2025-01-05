@@ -90,7 +90,7 @@ kind: Route
 metadata:
   name: mqtt-route
 spec:
-  host: mqtt.2405198.rahtiapp.fi
+  host: <url>
   to:
     kind: Service
     name: mqtt-service
